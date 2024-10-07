@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>スコアボード</title>
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid white;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>スコアボード</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>チーム名</th>
+                <th>得点</th>
+                <th>最終チェックイン時刻</th>
+            </tr>
+        </thead>
+        <tbody id="scoreTable">
+            <tr>
+                <td>チームA</td>
+                <td id="scoreA">0</td>
+                <td id="lastCheckinA">未チェックイン</td>
+            </tr>
+            <tr>
+                <td>チームB</td>
+                <td id="scoreB">0</td>
+                <td id="lastCheckinB">未チェックイン</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbfVrBJR-5jcZkTwP2Oz71lNCp6cndMbWnenNGpb9duaHwBInP0OTnxT-62E74CSBh/exec';
+
+        function updateScores() {
+            fetch(GAS_URL + '?action=getScores&team=チームA')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('scoreA').innerText = data.score;
+                    document.getElementById('lastCheckinA').innerText = data.lastCheckin;
+                });
+
+            fetch(GAS_URL + '?action=getScores&team=チームB')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('scoreB').innerText = data.score;
+                    document.getElementById('lastCheckinB').innerText = data.lastCheckin;
+                });
+        }
+
+        setInterval(updateScores, 600000); // 10分ごとにスコアを更新
+        updateScores(); // 初回呼び出し
+    </script>
+</body>
+</html>
