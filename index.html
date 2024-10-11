@@ -2,29 +2,42 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>スコアボード</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スコアボード（香川県版）</title>
     <style>
         body {
-            background-color: #222;
+            background-color: #1a1a1a;
             color: white;
             font-family: Arial, sans-serif;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid white;
-            padding: 8px;
+            margin: 0;
+            padding: 0;
             text-align: center;
         }
+        table {
+            width: 80%;
+            margin: 50px auto;
+            border-collapse: collapse;
+            background-color: #333;
+        }
+        th, td {
+            padding: 15px;
+            border: 1px solid #555;
+        }
         th {
-            background-color: #555;
+            background-color: #4CAF50;
+        }
+        td {
+            background-color: #222;
+        }
+        #message {
+            color: #4CAF50;
+            font-size: 1.2em;
         }
     </style>
 </head>
 <body>
-    <h1>スコアボード</h1>
+    <h1>スコアボード（香川県版）</h1>
+    <div id="message"></div>
     <table>
         <thead>
             <tr>
@@ -33,41 +46,53 @@
                 <th>最終チェックイン時刻</th>
             </tr>
         </thead>
-        <tbody id="scoreTable">
-            <tr>
-                <td>チームA</td>
-                <td id="scoreA">0</td>
-                <td id="lastCheckinA">未チェックイン</td>
-            </tr>
-            <tr>
-                <td>チームB</td>
-                <td id="scoreB">0</td>
-                <td id="lastCheckinB">未チェックイン</td>
-            </tr>
+        <tbody id="scoreboard">
+            <!-- スコアボードの内容がここに挿入されます -->
         </tbody>
     </table>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwbfVrBJR-5jcZkTwP2Oz71lNCp6cndMbWnenNGpb9duaHwBInP0OTnxT-62E74CSBh/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/あなたのスクリプトID/exec'; // GASのURL
 
-        function updateScores() {
-            fetch(GAS_URL + '?action=getScores&team=チームA')
+        function fetchEndTime() {
+            fetch(GAS_URL + '?action=getEndTime')
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('scoreA').innerText = data.score;
-                    document.getElementById('lastCheckinA').innerText = data.lastCheckin;
-                });
-
-            fetch(GAS_URL + '?action=getScores&team=チームB')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('scoreB').innerText = data.score;
-                    document.getElementById('lastCheckinB').innerText = data.lastCheckin;
+                    const currentTime = new Date();
+                    const endTime = new Date(data.endTime);
+                    const oneHourBeforeEnd = new Date(endTime.getTime() - (1 * 60 * 60 * 1000)); // 終了時刻の1時間前
+                    
+                    // 終了1時間前の場合はメッセージを表示
+                    if (currentTime >= oneHourBeforeEnd) {
+                        document.getElementById('message').innerText = 'スコアボードは終了1時間前のため、表示できません。';
+                        document.getElementById('scoreboard').innerHTML = ''; // テーブルの内容をクリア
+                    } else {
+                        fetchScores();
+                    }
                 });
         }
 
-        setInterval(updateScores, 600000); // 10分ごとにスコアを更新
-        updateScores(); // 初回呼び出し
+        function fetchScores() {
+            fetch(GAS_URL + '?action=getAllScores')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('scoreboard');
+                    tbody.innerHTML = ''; // 一度内容をクリアする
+
+                    data.forEach(team => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${team.name}</td>
+                            <td>${team.score}</td>
+                            <td>${team.lastCheckin ? new Date(team.lastCheckin).toLocaleString() : '未チェックイン'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                });
+        }
+
+        // ページを読み込んだ際に終了時刻を取得
+        window.onload = fetchEndTime;
     </script>
 </body>
 </html>
