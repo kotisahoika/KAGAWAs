@@ -3,96 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スコアボード（香川県版）</title>
+    <title>スコアボード</title>
     <style>
         body {
             background-color: #1a1a1a;
             color: white;
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
             text-align: center;
+            margin: 0;
+            padding: 20px;
         }
-        table {
-            width: 80%;
-            margin: 50px auto;
-            border-collapse: collapse;
-            background-color: #333;
-        }
-        th, td {
-            padding: 15px;
-            border: 1px solid #555;
-        }
-        th {
-            background-color: #4CAF50;
-        }
-        td {
-            background-color: #222;
-        }
-        #message {
-            color: #4CAF50;
+        #scoreboard {
+            margin-top: 20px;
             font-size: 1.2em;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <h1>スコアボード（香川県版）</h1>
-    <div id="message"></div>
-    <table>
-        <thead>
-            <tr>
-                <th>チーム名</th>
-                <th>得点</th>
-                <th>最終チェックイン時刻</th>
-            </tr>
-        </thead>
-        <tbody id="scoreboard">
-            <!-- スコアボードの内容がここに挿入されます -->
-        </tbody>
-    </table>
+    <h1>スコアボード</h1>
+    <div id="scoreboard">
+        <!-- スコアボードの内容がここに挿入されます -->
+    </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyFFyaCZZ28vwZZlVTuV6Abp6Wgy6pSWpwxvj3AOPTX0uMtPYlBNgXwo3Dgd_Iaev8I/exec'; // GASのURL
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyElsflWXuqRAHp_6YvEC28838xcpwXu0lCL5QR6M6r4_u7EMTdetZz0HPT1co4UoSiNg/exec';
 
-        function fetchEndTime() {
-            fetch(GAS_URL + '?action=getEndTime')
-                .then(response => response.json())
-                .then(data => {
-                    const currentTime = new Date();
-                    const endTime = new Date(data.endTime);
-                    const oneHourBeforeEnd = new Date(endTime.getTime() - (1 * 60 * 60 * 1000)); // 終了時刻の1時間前
-                    
-                    // 終了1時間前の場合はメッセージを表示
-                    if (currentTime >= oneHourBeforeEnd) {
-                        document.getElementById('message').innerText = 'スコアボードは終了1時間前のため、表示できません。';
-                        document.getElementById('scoreboard').innerHTML = ''; // テーブルの内容をクリア
-                    } else {
-                        fetchScores();
-                    }
+        function loadScores() {
+            fetch(GAS_URL + '?action=getScores')
+            .then(response => response.json())
+            .then(data => {
+                let scoreboardHtml = '<table>';
+                scoreboardHtml += '<tr><th>チーム名</th><th>得点</th><th>最終チェックイン</th></tr>';
+                data.scores.forEach(score => {
+                    scoreboardHtml += `<tr><td>${score.team}</td><td>${score.score}</td><td>${score.lastCheckin}</td></tr>`;
                 });
+                scoreboardHtml += '</table>';
+                document.getElementById('scoreboard').innerHTML = scoreboardHtml;
+            });
         }
 
-        function fetchScores() {
-            fetch(GAS_URL + '?action=getAllScores')
-                .then(response => response.json())
-                .then(data => {
-                    const tbody = document.getElementById('scoreboard');
-                    tbody.innerHTML = ''; // 一度内容をクリアする
-
-                    data.forEach(team => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${team.name}</td>
-                            <td>${team.score}</td>
-                            <td>${team.lastCheckin ? new Date(team.lastCheckin).toLocaleString() : '未チェックイン'}</td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                });
-        }
-
-        // ページを読み込んだ際に終了時刻を取得
-        window.onload = fetchEndTime;
+        loadScores();
+        setInterval(loadScores, 30000); // 30秒ごとにスコアボードを更新
     </script>
 </body>
 </html>
