@@ -2,49 +2,72 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スコアボード</title>
+    <title>スコアボード（香川県版）</title>
     <style>
         body {
-            background-color: #1a1a1a;
+            background-color: #222;
             color: white;
             font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
         }
-        #scoreboard {
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: white;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #555;
+        }
+        th {
+            background-color: #333;
+        }
+        @media (max-width: 600px) {
+            body {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>スコアボード</h1>
-    <div id="scoreboard">
-        <!-- スコアボードの内容がここに挿入されます -->
-    </div>
+    <h1>スコアボード（香川県版）</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>チーム</th>
+                <th>得点</th>
+                <th>高松駅</th>
+                <th>香川県庁</th>
+                <th>高松市役所</th>
+            </tr>
+        </thead>
+        <tbody id="scoreboard">
+        </tbody>
+    </table>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyElsflWXuqRAHp_6YvEC28838xcpwXu0lCL5QR6M6r4_u7EMTdetZz0HPT1co4UoSiNg/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxu3OCRFkIaaCAxzV_a0GbV4RqSkuFJm8QfcelV6gad3j5JxUWNVZOc4WJHC-D-enYsqQ/exec';
 
-        function loadScores() {
+        function fetchScores() {
             fetch(GAS_URL + '?action=getScores')
-            .then(response => response.json())
-            .then(data => {
-                let scoreboardHtml = '<table>';
-                scoreboardHtml += '<tr><th>チーム名</th><th>得点</th><th>最終チェックイン</th></tr>';
-                data.scores.forEach(score => {
-                    scoreboardHtml += `<tr><td>${score.team}</td><td>${score.score}</td><td>${score.lastCheckin}</td></tr>`;
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('scoreboard');
+                    tbody.innerHTML = '';
+                    data.data.scores.forEach(score => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${score.team}</td>
+                            <td>${score.score}</td>
+                            <td>${score.lastCheckinLocation['高松駅'] || '未チェックイン'}</td>
+                            <td>${score.lastCheckinLocation['香川県庁'] || '未チェックイン'}</td>
+                            <td>${score.lastCheckinLocation['高松市役所'] || '未チェックイン'}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
                 });
-                scoreboardHtml += '</table>';
-                document.getElementById('scoreboard').innerHTML = scoreboardHtml;
-            });
         }
 
-        loadScores();
-        setInterval(loadScores, 30000); // 30秒ごとにスコアボードを更新
+        fetchScores();
+        setInterval(fetchScores, 30000); // 30秒ごとに更新
     </script>
 </body>
 </html>
